@@ -1,0 +1,1904 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PCL  — AI Athlete Body Movement Analysis</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<style>
+/* ── Fullscreen: outvidsec is the fullscreen root ── */
+[id^="outvidsec-"]:fullscreen {
+  display: flex !important;
+  flex-direction: column;
+  background: #000;
+  width: 100vw;
+  height: 100vh;
+  padding: 0 !important;
+}
+[id^="outvidsec-"]:fullscreen h4 { display: none; }
+[id^="outvidsec-"]:fullscreen [id^="vidwrap-"] {
+  flex: 1;
+  border-radius: 0 !important;
+  overflow: hidden;
+  min-height: 0;
+  border: none !important;
+}
+[id^="outvidsec-"]:fullscreen [id^="vidwrap-"] canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  display: block;
+}
+[id^="outvidsec-"]:fullscreen [id^="vidcontrols-"] {
+  flex-shrink: 0;
+  border-radius: 0 !important;
+  border: none !important;
+  background: rgba(0,0,0,0.92) !important;
+  padding: 10px 18px !important;
+}
+[id^="outvidsec-"]:fullscreen > div:last-child { display: none; } /* hide download link */
+
+@keyframes jumpCardIn {
+  from { opacity:0; transform:translateY(16px) scale(.96); }
+  to   { opacity:1; transform:translateY(0)    scale(1);   }
+}
+</style>
+</head>
+<body>
+
+
+<nav>
+  <span class="nav-brand">PCL BODY<span> ANALYSER</span></span>
+  <div class="nav-links">
+    <a href="#pushups" class="nav-link">Pushups</a>
+    <a href="#squat" class="nav-link">Squat</a>
+    <a href="#single_leg_squat" class="nav-link">Single Leg</a>
+    <a href="#walking_lunges" class="nav-link">Lunges</a>
+    <a href="#broad_jump" class="nav-link">Broad Jump</a>
+    <a href="#squat_with_stick" class="nav-link">Stick Squat</a>
+    <a href="#vertical_jump" class="nav-link">Vertical Jump</a>
+    <a href="#speed_20m" class="nav-link">20M DASH SPEED </a>
+  </div>
+</nav>
+
+
+<section class="hero">
+  <div class="hero-bg-img"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-tag">AI-Powered Movement Analysis</div>
+  <h1>ANALYSE YOUR<br><em>ATHLETIC</em><br>MOVEMENT</h1>
+  <p class="hero-sub">Upload a video or image of any of the 8 exercises below. Our AI computes real joint angles, rep counts, form scores, and gives you a full breakdown — frame by frame.</p>
+  <a href="#pushups" class="scroll-cta">↓ &nbsp; Choose an exercise</a>
+</section>
+
+
+<div class="section-wrap">
+
+
+
+ 
+  <div class="project-card reveal" id="pushups">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Strength · Upper Body</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Pushups</div>
+          <div class="card-sub">Upper body endurance &amp; shoulder stability</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+       
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input pushup.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">Pushups Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output-pushup.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">We count every rep using bilateral elbow angle tracking with a 5-frame smoothing filter to eliminate jitter. Each rep records elbow angle at the bottom position. Spine alignment is tracked frame by frame to detect hip sag or pike. You get a per-rep breakdown table and 5 annotated frame snapshots.</p>
+      <div class="measures">
+        <span class="measure-chip">Rep Count</span><span class="measure-chip">Elbow Angle (L&amp;R)</span><span class="measure-chip">Min Elbow Depth</span><span class="measure-chip">Spine Alignment</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+      
+      <div class="upload-area" id="dz-pushups" onclick="document.getElementById('file-pushups').click()">
+        <input type="file" id="file-pushups" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('pushups',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-pushups">
+        <video id="vid-pushups" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-pushups">file</span>
+          <span class="v-size" id="vsize-pushups">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-pushups" onclick="runAnalysis('pushups')">
+        &#x25B8; &nbsp; Analyse Pushups
+      </button>
+
+      
+      <div class="loading-box" id="loading-pushups">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-pushups"></div>
+          </div>
+          <div class="progress-pct" id="ppct-pushups">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-pushups">Starting&hellip;</div>
+      </div>
+
+      
+      <div class="error-box" id="err-pushups"><p id="errmsg-pushups"></p></div>
+
+       
+      <div class="result-box" id="res-pushups">
+        <div class="result-media" id="media-pushups" style="display:none;margin-bottom:20px;">
+          <video id="outvid-pushups" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-pushups" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-pushups"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('pushups')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-pushups"></div>
+          <div class="findings" id="findings-pushups"></div>
+          <div class="rep-section" id="reps-pushups" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-pushups">
+              <thead><tr id="rephead-pushups"></tr></thead>
+              <tbody id="repbody-pushups"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-pushups">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-pushups"></div>
+          </div>
+           
+          <div class="output-video-section" id="outvidsec-pushups" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-pushups" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-pushups" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-pushups" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-pushups" onclick="togglePlay('pushups')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-pushups" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('pushups',this.value)"/>
+                <span id="vidtime-pushups" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('pushups')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-pushups" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+  <div class="project-card reveal" id="squat">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Strength · Lower Body</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Squat</div>
+          <div class="card-sub">Bilateral knee, hip &amp; ankle mechanics</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+         
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_squat.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">Squat Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_squat.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Counts reps via bilateral knee angle (confidence-weighted left/right average). Tracks hip hinge quality, ankle dorsiflexion, and depth. Flags insufficient depth, forward lean, and ankle mobility restrictions. Per-rep breakdown with knee and hip angles.</p>
+      <div class="measures">
+        <span class="measure-chip">Rep Count</span><span class="measure-chip">Knee Angle (L&amp;R)</span><span class="measure-chip">Squat Depth</span><span class="measure-chip">Hip Angle</span><span class="measure-chip">Ankle Dorsiflexion</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+       
+      <div class="upload-area" id="dz-squat" onclick="document.getElementById('file-squat').click()">
+        <input type="file" id="file-squat" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('squat',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-squat">
+        <video id="vid-squat" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-squat">file</span>
+          <span class="v-size" id="vsize-squat">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-squat" onclick="runAnalysis('squat')">
+        &#x25B8; &nbsp; Analyse Squat
+      </button>
+
+      
+      <div class="loading-box" id="loading-squat">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-squat"></div>
+          </div>
+          <div class="progress-pct" id="ppct-squat">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-squat">Starting&hellip;</div>
+      </div>
+
+      
+      <div class="error-box" id="err-squat"><p id="errmsg-squat"></p></div>
+
+       
+      <div class="result-box" id="res-squat">
+        <div class="result-media" id="media-squat" style="display:none;margin-bottom:20px;">
+          <video id="outvid-squat" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-squat" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-squat"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('squat')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-squat"></div>
+          <div class="findings" id="findings-squat"></div>
+          <div class="rep-section" id="reps-squat" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-squat">
+              <thead><tr id="rephead-squat"></tr></thead>
+              <tbody id="repbody-squat"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-squat">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-squat"></div>
+          </div>
+           
+          <div class="output-video-section" id="outvidsec-squat" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-squat" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-squat" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-squat" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-squat" onclick="togglePlay('squat')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-squat" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('squat',this.value)"/>
+                <span id="vidtime-squat" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('squat')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-squat" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+   
+  <div class="project-card reveal" id="single_leg_squat">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Strength · Unilateral Balance</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Single Leg Squat</div>
+          <div class="card-sub">Unilateral strength, knee stability &amp; pelvic control</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+       
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_single_leg.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">Single Leg Squat Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+       
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_single_leg.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Counts reps on the primary leg, measures depth, and detects pelvic drop (Trendelenburg sign) — the key indicator of weak hip abductors. Monitors knee angle, hip angle, and trunk lean per rep. The gold-standard functional strength screen.</p>
+      <div class="measures">
+        <span class="measure-chip">Rep Count</span><span class="measure-chip">Knee Angle</span><span class="measure-chip">Hip Angle</span><span class="measure-chip">Pelvic Drop Index</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+       
+      <div class="upload-area" id="dz-single_leg_squat" onclick="document.getElementById('file-single_leg_squat').click()">
+        <input type="file" id="file-single_leg_squat" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('single_leg_squat',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-single_leg_squat">
+        <video id="vid-single_leg_squat" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-single_leg_squat">file</span>
+          <span class="v-size" id="vsize-single_leg_squat">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-single_leg_squat" onclick="runAnalysis('single_leg_squat')">
+        &#x25B8; &nbsp; Analyse Single Leg Squat
+      </button>
+
+     
+      <div class="loading-box" id="loading-single_leg_squat">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-single_leg_squat"></div>
+          </div>
+          <div class="progress-pct" id="ppct-single_leg_squat">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-single_leg_squat">Starting&hellip;</div>
+      </div>
+
+      
+      <div class="error-box" id="err-single_leg_squat"><p id="errmsg-single_leg_squat"></p></div>
+
+       
+      <div class="result-box" id="res-single_leg_squat">
+        <div class="result-media" id="media-single_leg_squat" style="display:none;margin-bottom:20px;">
+          <video id="outvid-single_leg_squat" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-single_leg_squat" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-single_leg_squat"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('single_leg_squat')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-single_leg_squat"></div>
+          <div class="findings" id="findings-single_leg_squat"></div>
+          <div class="rep-section" id="reps-single_leg_squat" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-single_leg_squat">
+              <thead><tr id="rephead-single_leg_squat"></tr></thead>
+              <tbody id="repbody-single_leg_squat"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-single_leg_squat">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-single_leg_squat"></div>
+          </div>
+           
+          <div class="output-video-section" id="outvidsec-single_leg_squat" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-single_leg_squat" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-single_leg_squat" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-single_leg_squat" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-single_leg_squat" onclick="togglePlay('single_leg_squat')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-single_leg_squat" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('single_leg_squat',this.value)"/>
+                <span id="vidtime-single_leg_squat" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('single_leg_squat')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-single_leg_squat" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+   
+  <div class="project-card reveal" id="broad_jump">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Explosiveness · Horizontal Power</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Broad Jump</div>
+          <div class="card-sub">Jump distance, takeoff mechanics &amp; landing quality</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+       
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_broad_jump.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">Broad Jump Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_broad_jump.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Phase-based analysis covering pre-jump crouch, takeoff, flight, landing, and recovery. Reports estimated jump distance from hip displacement, takeoff knee angle (crouch depth), landing angle (impact absorption), a dedicated landing score, and an overall form score.</p>
+      <div class="measures">
+        <span class="measure-chip">Jump Distance</span><span class="measure-chip">Takeoff Angle</span><span class="measure-chip">Landing Angle</span><span class="measure-chip">Landing Score /10</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+       
+      <div class="upload-area" id="dz-broad_jump" onclick="document.getElementById('file-broad_jump').click()">
+        <input type="file" id="file-broad_jump" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('broad_jump',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-broad_jump">
+        <video id="vid-broad_jump" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-broad_jump">file</span>
+          <span class="v-size" id="vsize-broad_jump">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-broad_jump" onclick="runAnalysis('broad_jump')">
+        &#x25B8; &nbsp; Analyse Broad Jump
+      </button>
+
+     
+      <div class="loading-box" id="loading-broad_jump">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-broad_jump"></div>
+          </div>
+          <div class="progress-pct" id="ppct-broad_jump">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-broad_jump">Starting&hellip;</div>
+      </div>
+
+    
+      <div class="error-box" id="err-broad_jump"><p id="errmsg-broad_jump"></p></div>
+
+     
+      <div class="result-box" id="res-broad_jump">
+        <div class="result-media" id="media-broad_jump" style="display:none;margin-bottom:20px;">
+          <video id="outvid-broad_jump" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-broad_jump" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-broad_jump"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('broad_jump')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-broad_jump"></div>
+          <div class="findings" id="findings-broad_jump"></div>
+          <div class="rep-section" id="reps-broad_jump" style="display:none">
+            <h4>Per-Jump Breakdown</h4>
+            <table class="rep-table" id="reptable-broad_jump">
+              <thead><tr id="rephead-broad_jump"></tr></thead>
+              <tbody id="repbody-broad_jump"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-broad_jump">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-broad_jump"></div>
+          </div>
+          
+          <div class="output-video-section" id="outvidsec-broad_jump" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-broad_jump" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-broad_jump" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-broad_jump" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-broad_jump" onclick="togglePlay('broad_jump')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-broad_jump" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('broad_jump',this.value)"/>
+                <span id="vidtime-broad_jump" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('broad_jump')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-broad_jump" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+   
+  <div class="project-card reveal" id="walking_lunges">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Strength · Functional Movement</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Walking Lunges</div>
+          <div class="card-sub">Alternating leg strength, stability &amp; depth</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_lunges.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">Walking Lunges Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_lunges.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Counts each lunge step by detecting the front knee crossing below 120° then returning above 155°. Tracks the front knee depth at the bottom of each rep, trunk uprightness throughout, and bilateral symmetry. Per-rep front and back knee angle breakdown.</p>
+      <div class="measures">
+        <span class="measure-chip">Rep Count</span><span class="measure-chip">Front Knee Depth</span><span class="measure-chip">Back Knee Angle</span><span class="measure-chip">Trunk Angle</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+       
+      <div class="upload-area" id="dz-walking_lunges" onclick="document.getElementById('file-walking_lunges').click()">
+        <input type="file" id="file-walking_lunges" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('walking_lunges',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-walking_lunges">
+        <video id="vid-walking_lunges" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-walking_lunges">file</span>
+          <span class="v-size" id="vsize-walking_lunges">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-walking_lunges" onclick="runAnalysis('walking_lunges')">
+        &#x25B8; &nbsp; Analyse Walking Lunges
+      </button>
+
+      
+      <div class="loading-box" id="loading-walking_lunges">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-walking_lunges"></div>
+          </div>
+          <div class="progress-pct" id="ppct-walking_lunges">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-walking_lunges">Starting&hellip;</div>
+      </div>
+
+       
+      <div class="error-box" id="err-walking_lunges"><p id="errmsg-walking_lunges"></p></div>
+
+       
+      <div class="result-box" id="res-walking_lunges">
+        <div class="result-media" id="media-walking_lunges" style="display:none;margin-bottom:20px;">
+          <video id="outvid-walking_lunges" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-walking_lunges" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-walking_lunges"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('walking_lunges')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-walking_lunges"></div>
+          <div class="findings" id="findings-walking_lunges"></div>
+          <div class="rep-section" id="reps-walking_lunges" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-walking_lunges">
+              <thead><tr id="rephead-walking_lunges"></tr></thead>
+              <tbody id="repbody-walking_lunges"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-walking_lunges">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-walking_lunges"></div>
+          </div>
+       
+          <div class="output-video-section" id="outvidsec-walking_lunges" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-walking_lunges" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-walking_lunges" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-walking_lunges" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-walking_lunges" onclick="togglePlay('walking_lunges')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-walking_lunges" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('walking_lunges',this.value)"/>
+                <span id="vidtime-walking_lunges" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('walking_lunges')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-walking_lunges" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="project-card reveal" id="squat_with_stick">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Mobility · Overhead Assessment</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Squat with Stick</div>
+          <div class="card-sub">Overhead mobility, ankle &amp; hip FMS screen</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+         
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_stick_squat.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title"> Squat with Stick Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+         
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_stick_squat.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Counts reps while tracking arms overhead. Measures knee angle, hip angle, ankle dorsiflexion, and wrist position relative to shoulders — detecting forward bar drift throughout the squat. A classic FMS-style screen for full-chain mobility assessment.</p>
+      <div class="measures">
+        <span class="measure-chip">Rep Count</span><span class="measure-chip">Knee Angle</span><span class="measure-chip">Hip Angle</span><span class="measure-chip">Ankle Angle</span><span class="measure-chip">Overhead Bar Path</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+       
+      <div class="upload-area" id="dz-squat_with_stick" onclick="document.getElementById('file-squat_with_stick').click()">
+        <input type="file" id="file-squat_with_stick" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('squat_with_stick',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-squat_with_stick">
+        <video id="vid-squat_with_stick" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-squat_with_stick">file</span>
+          <span class="v-size" id="vsize-squat_with_stick">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-squat_with_stick" onclick="runAnalysis('squat_with_stick')">
+        &#x25B8; &nbsp; Analyse Overhead Squat with Stick
+      </button>
+
+       
+      <div class="loading-box" id="loading-squat_with_stick">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-squat_with_stick"></div>
+          </div>
+          <div class="progress-pct" id="ppct-squat_with_stick">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-squat_with_stick">Starting&hellip;</div>
+      </div>
+
+       
+      <div class="error-box" id="err-squat_with_stick"><p id="errmsg-squat_with_stick"></p></div>
+
+       
+      <div class="result-box" id="res-squat_with_stick">
+        <div class="result-media" id="media-squat_with_stick" style="display:none;margin-bottom:20px;">
+          <video id="outvid-squat_with_stick" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-squat_with_stick" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-squat_with_stick"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('squat_with_stick')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-squat_with_stick"></div>
+          <div class="findings" id="findings-squat_with_stick"></div>
+          <div class="rep-section" id="reps-squat_with_stick" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-squat_with_stick">
+              <thead><tr id="rephead-squat_with_stick"></tr></thead>
+              <tbody id="repbody-squat_with_stick"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-squat_with_stick">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-squat_with_stick"></div>
+          </div>
+          
+          <div class="output-video-section" id="outvidsec-squat_with_stick" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-squat_with_stick" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-squat_with_stick" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-squat_with_stick" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-squat_with_stick" onclick="togglePlay('squat_with_stick')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-squat_with_stick" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('squat_with_stick',this.value)"/>
+                <span id="vidtime-squat_with_stick" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('squat_with_stick')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-squat_with_stick" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+   
+  <div class="project-card reveal" id="vertical_jump">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Explosiveness · Vertical Power</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">Vertical Jump</div>
+          <div class="card-sub">Jump height, flight height, form &amp; landing quality</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+       
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_vertical_jump.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">Vertical Jump Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_vertical_jump.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Tracks hip vertical displacement to estimate jump height and flight height. Reports a form score based on takeoff and hip drive quality, and a landing score based on knee absorption angle. Provides 5 phase snapshots across the full jump arc.</p>
+      <div class="measures">
+        <span class="measure-chip">Jump Height</span><span class="measure-chip">Flight Height</span><span class="measure-chip">Form Score /10</span><span class="measure-chip">Landing Score /10</span>
+      </div>
+
+    
+      <div class="upload-area" id="dz-vertical_jump" onclick="document.getElementById('file-vertical_jump').click()">
+        <input type="file" id="file-vertical_jump" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('vertical_jump',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-vertical_jump">
+        <video id="vid-vertical_jump" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-vertical_jump">file</span>
+          <span class="v-size" id="vsize-vertical_jump">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-vertical_jump" onclick="runAnalysis('vertical_jump')">
+        &#x25B8; &nbsp; Analyse Vertical Jump
+      </button>
+
+      
+      <div class="loading-box" id="loading-vertical_jump">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-vertical_jump"></div>
+          </div>
+          <div class="progress-pct" id="ppct-vertical_jump">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-vertical_jump">Starting&hellip;</div>
+      </div>
+
+      
+      <div class="error-box" id="err-vertical_jump"><p id="errmsg-vertical_jump"></p></div>
+
+     
+      <div class="result-box" id="res-vertical_jump">
+        <div class="result-media" id="media-vertical_jump" style="display:none;margin-bottom:20px;">
+          <video id="outvid-vertical_jump" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-vertical_jump" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-vertical_jump"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('vertical_jump')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-vertical_jump"></div>
+          <div class="findings" id="findings-vertical_jump"></div>
+          <div class="rep-section" id="reps-vertical_jump" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-vertical_jump">
+              <thead><tr id="rephead-vertical_jump"></tr></thead>
+              <tbody id="repbody-vertical_jump"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-vertical_jump">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-vertical_jump"></div>
+          </div>
+           
+          <div class="output-video-section" id="outvidsec-vertical_jump" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-vertical_jump" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-vertical_jump" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-vertical_jump" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-vertical_jump" onclick="togglePlay('vertical_jump')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-vertical_jump" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('vertical_jump',this.value)"/>
+                <span id="vidtime-vertical_jump" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('vertical_jump')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-vertical_jump" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="project-card reveal" id="speed_20m">
+
+    <div class="card-banner card-banner--videos">
+      <div class="pushup-banner-topbar">
+        <div class="card-tag">Speed · Acceleration Mechanics</div>
+        <div class="pushup-banner-title-row">
+          <div class="card-title">20M DASH SPEED</div>
+          <div class="card-sub">Duration, average speed, peak speed &amp; form speed</div>
+        </div>
+      </div>
+      <div class="pushup-videos-row">
+         
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot"></span>
+            <span class="pcl-step-label">STEP 1 — RAW INPUT</span>
+            <span class="pcl-badge pcl-badge-blue">Player Video</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='input_speed.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">20M DASH SPEED Raw Footage</div>
+              <div class="pcl-caption-sub">Original uploaded footage before AI processing.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pushup-vid-panel">
+          <div class="pushup-vid-header">
+            <span class="pcl-step-dot pcl-step-dot--ai"></span>
+            <span class="pcl-step-label">STEP 2 — AI PROCESSED</span>
+            <span class="pcl-badge pcl-badge-gold">Tracking Layer</span>
+          </div>
+          <div class="pushup-vid-wrap">
+            <video autoplay muted loop playsinline>
+              <source src="{{ url_for('video', filename='output_speed.mp4') }}" type="video/mp4">
+            </video>
+            <div class="pushup-vid-caption">
+              <div class="pcl-caption-title">PCL AI Analysis Overlay</div>
+              <div class="pcl-caption-sub">Joint tracking, angles &amp; form scoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+    </div>
+
+    <div class="card-body">
+      <p class="card-desc">Estimates sprint duration from frame count, average speed and peak speed from hip displacement across the run, and a form-adjusted speed that weights mechanics quality alongside raw velocity. Also analyses knee drive and stride symmetry per stride cycle.</p>
+      <div class="measures">
+        <span class="measure-chip">Duration</span><span class="measure-chip">Average Speed</span><span class="measure-chip">Peak Speed</span><span class="measure-chip">Form Speed</span><span class="measure-chip">Form Score /10</span>
+      </div>
+
+       
+      <div class="upload-area" id="dz-speed_20m" onclick="document.getElementById('file-speed_20m').click()">
+        <input type="file" id="file-speed_20m" accept="video/mp4,video/avi,video/mov,video/webm,image/jpeg,image/png" style="display:none" onchange="handleFile('speed_20m',this)"/>
+        <span class="upload-icon">&#x1F3A5;</span>
+        <div class="upload-title">Upload Video or Image</div>
+        <div class="upload-hint">Drag &amp; drop or <span>click to browse</span> &middot; up to 200MB</div>
+        <div class="upload-hint" style="margin-top:6px;font-size:.76rem;color:#ccc;">Only upload media showing this selected exercise.</div>
+        <div class="format-row">
+          <span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WEBM</span><span class="fmt">JPG</span><span class="fmt">PNG</span>
+        </div>
+      </div>
+
+      <div class="video-preview" id="preview-speed_20m">
+        <video id="vid-speed_20m" controls muted playsinline></video>
+        <div class="video-meta">
+          <span class="v-name" id="vname-speed_20m">file</span>
+          <span class="v-size" id="vsize-speed_20m">0 MB</span>
+        </div>
+      </div>
+
+      <button class="analyse-btn" id="btn-speed_20m" onclick="runAnalysis('speed_20m')">
+        &#x25B8; &nbsp; Analyse 20m Dash Speed
+      </button>
+
+    
+      <div class="loading-box" id="loading-speed_20m">
+        <div class="spinner"></div>
+        <div class="loading-title">Analysing Your Movement</div>
+        <div class="loading-sub">MediaPipe is processing your upload frame by frame</div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="pbar-speed_20m"></div>
+          </div>
+          <div class="progress-pct" id="ppct-speed_20m">0%</div>
+        </div>
+        <div class="progress-step-label" id="plabel-speed_20m">Starting&hellip;</div>
+      </div>
+
+    
+      <div class="error-box" id="err-speed_20m"><p id="errmsg-speed_20m"></p></div>
+
+      
+      <div class="result-box" id="res-speed_20m">
+        <div class="result-media" id="media-speed_20m" style="display:none;margin-bottom:20px;">
+          <video id="outvid-speed_20m" controls playsinline muted style="width:100%;border-radius:12px;display:none;"></video>
+          <img id="outimg-speed_20m" alt="Annotated output" style="width:100%;border-radius:12px;display:none;object-fit:cover;" />
+        </div>
+        <div class="result-top">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="result-ok">&#x2713; Complete</span>
+            <span class="result-exercise" id="res-title-speed_20m"></span>
+          </div>
+          <button class="retry-btn" onclick="resetCard('speed_20m')">Upload Another</button>
+        </div>
+        <div class="result-inner">
+          <div class="metrics-grid" id="metrics-speed_20m"></div>
+          <div class="findings" id="findings-speed_20m"></div>
+          <div class="rep-section" id="reps-speed_20m" style="display:none">
+            <h4>Per-Rep Breakdown</h4>
+            <table class="rep-table" id="reptable-speed_20m">
+              <thead><tr id="rephead-speed_20m"></tr></thead>
+              <tbody id="repbody-speed_20m"></tbody>
+            </table>
+          </div>
+          <div class="snapshots-section" id="snaps-speed_20m">
+            <h4>Frame Analysis</h4>
+            <div class="snapshots-grid" id="snapgrid-speed_20m"></div>
+          </div>
+         
+          <div class="output-video-section" id="outvidsec-speed_20m" style="display:none">
+            <h4>Annotated Output Video</h4>
+            <div id="vidwrap-speed_20m" style="position:relative;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border2);">
+              <canvas id="outcanvas-speed_20m" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <div id="vidcontrols-speed_20m" style="background:rgba(0,0,0,0.85);border-radius:0 0 12px 12px;padding:8px 14px;
+                display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-top:none;">
+                <button id="playbtn-speed_20m" onclick="togglePlay('speed_20m')"
+                  style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0;line-height:1;">&#x25B6;</button>
+                <input type="range" id="vidseek-speed_20m" min="0" value="0" step="1"
+                  style="flex:1;accent-color:var(--fire);" oninput="seekVideo('speed_20m',this.value)"/>
+                <span id="vidtime-speed_20m" style="font-family:var(--font-mono);font-size:0.7rem;color:#ccc;white-space:nowrap;">0:00</span>
+                <button onclick="toggleFullscreen('speed_20m')"
+                  style="background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;">&#x26F6;</button>
+              </div>
+            <div style="margin-top:10px;text-align:right;">
+              <a id="outdl-speed_20m" href="#" download
+                style="font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+                text-transform:uppercase;color:var(--sky);text-decoration:none;
+                border:1px solid var(--border2);padding:6px 14px;border-radius:8px;
+                display:inline-flex;align-items:center;gap:6px;">
+                &#x2B07; Download Annotated Video
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+ 
+<div id="lightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);
+  backdrop-filter:blur(8px);align-items:center;justify-content:center;cursor:zoom-out;"
+  onclick="closeLightbox()">
+  <div style="position:relative;max-width:90vw;max-height:90vh;" onclick="event.stopPropagation()">
+    <img id="lb-img" src="" alt="Frame"
+      style="max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 8px 48px rgba(0,0,0,0.6);display:block;"/>
+    <div id="lb-label"
+      style="text-align:center;margin-top:12px;font-family:var(--font-mono);font-size:0.75rem;
+      letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.6);"></div>
+    <button onclick="closeLightbox()"
+      style="position:absolute;top:-16px;right:-16px;width:36px;height:36px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;
+      font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <button id="lb-prev" onclick="lbNav(-1)"
+      style="position:absolute;left:-52px;top:50%;transform:translateY(-50%);width:40px;height:40px;
+      border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);
+      color:#fff;font-size:1.2rem;cursor:pointer;">‹</button>
+    <button id="lb-next" onclick="lbNav(1)"
+      style="position:absolute;right:-52px;top:50%;transform:translateY(-50%);width:40px;height:40px;
+      border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);
+      color:#fff;font-size:1.2rem;cursor:pointer;">›</button>
+  </div>
+</div>
+
+ 
+<footer>
+  <span class="footer-brand">PCL BODY <span> ANALYSER </span></span>
+</footer>
+
+<script>
+
+// Scroll reveal
+const ro=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// Drag & drop
+['pushups','squat','single_leg_squat','broad_jump','walking_lunges','squat_with_stick','vertical_jump','speed_20m'].forEach(id=>{
+  const dz=document.getElementById('dz-'+id);
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('dragover');
+    const f=e.dataTransfer.files[0];if(f)processFile(id,f);
+  });
+});
+
+function handleFile(id,input){
+  if(input.files&&input.files[0])processFile(id,input.files[0]);
+}
+
+function processFile(id,file){
+  window['_f_'+id]=file;
+  const isVid=file.type.startsWith('video/');
+  const pre=document.getElementById('preview-'+id);
+  const vid=document.getElementById('vid-'+id);
+  pre.style.display='block';
+  if(vid.src && vid.src.startsWith('blob:')){ URL.revokeObjectURL(vid.src); }
+  vid.removeAttribute('src'); vid.load();
+  vid.src=URL.createObjectURL(file);
+  if(!isVid){vid.style.display='none';}
+  else vid.style.display='block';
+  document.getElementById('vname-'+id).textContent=file.name;
+  document.getElementById('vsize-'+id).textContent=(file.size/1048576).toFixed(1)+' MB';
+  const btn=document.getElementById('btn-'+id);
+  btn.style.display='block';
+  btn.disabled=false;
+  // Reset progress bar
+  const pb=document.getElementById('pbar-'+id);
+  const pp=document.getElementById('ppct-'+id);
+  const pl=document.getElementById('plabel-'+id);
+  if(pb) pb.style.width='0%';
+  if(pp) pp.textContent='0%';
+  if(pl) pl.textContent='Starting…';
+  ['loading-','res-','err-'].forEach(p=>hide(p+id));
+}
+
+function hide(id){
+  const el=document.getElementById(id);
+  if(el){
+    el.classList.remove('show');
+    el.style.display='none';
+    const sp=el.querySelector('.spinner');
+    if(sp) sp.style.animation='none';
+  }
+}
+function show(id,cls='show'){
+  const el=document.getElementById(id);
+  if(el){
+    el.style.display='block';
+    el.classList.add(cls);
+    const sp=el.querySelector('.spinner');
+    if(sp) sp.style.animation='spin 0.8s linear infinite';
+  }
+}
+
+function resetCard(id){
+  document.getElementById('preview-'+id).style.display='none';
+  const resetBtn=document.getElementById('btn-'+id);
+  resetBtn.style.display='none';
+  resetBtn.disabled=false;
+  document.getElementById('file-'+id).value='';
+  window['_f_'+id]=null;
+  const inVid=document.getElementById('vid-'+id);
+  inVid.pause(); inVid.removeAttribute('src'); inVid.load();
+  const outVid=document.getElementById('outvid-'+id);
+  outVid.pause(); outVid.removeAttribute('src'); outVid.load();
+  document.getElementById('outimg-'+id).removeAttribute('src');
+  ['loading-','res-','err-','media-'].forEach(p=>hide(p+id));
+  const ovs=document.getElementById('outvidsec-'+id); if(ovs)ovs.style.display='none';
+  // Canvas reset
+  if(_vidState[id]){ clearInterval(_vidState[id].timer); delete _vidState[id]; }
+  const canvas=document.getElementById('outcanvas-'+id);
+  if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+  // Reset progress bar
+  const pb=document.getElementById('pbar-'+id);
+  const pp=document.getElementById('ppct-'+id);
+  const pl=document.getElementById('plabel-'+id);
+  if(pb) pb.style.width='0%';
+  if(pp) pp.textContent='0%';
+  if(pl) pl.textContent='Starting…';
+}
+
+function renderOutputMedia(id,d){
+  const sec=document.getElementById('outvidsec-'+id);
+  const oldMedia=document.getElementById('media-'+id);
+  if(oldMedia) oldMedia.style.display='none';
+  if(_vidState[id]){ clearInterval(_vidState[id].timer); delete _vidState[id]; }
+  if(d.video_frames && d.video_frames.length > 0 && d.media_type==='video'){
+    sec.style.display='block';
+    setTimeout(()=>{ initCanvasPlayer(id, d.video_frames, d.video_fps||8); }, 100);
+    const dl=document.getElementById('outdl-'+id);
+    if(dl && d.output_url){ dl.href=d.output_url+'?_t='+Date.now(); dl.download='annotated_'+id+'.mp4'; }
+    document.getElementById('playbtn-'+id).textContent='▶';
+  } else if(d.media_type==='image'){
+    const outImg=document.getElementById('outimg-'+id);
+    const mediaSec=document.getElementById('media-'+id);
+    if(outImg && d.output_url){
+      outImg.src=d.output_url+'?_t='+Date.now();
+      outImg.style.display='block';
+      if(mediaSec) mediaSec.style.display='block';
+    }
+    if(sec) sec.style.display='none';
+  } else {
+    if(sec) sec.style.display='none';
+  }
+}
+
+const SNAP_LABELS=['Start','25%','50%','75%','End'];
+const PHASE_LABELS=['Pre-swing','Takeoff','Flight','Contact','Recovery'];
+const STEP_LABELS=['Pose Detection','Joint Angles','Rep Count','Form Score'];
+
+async function runAnalysis(id){
+  const file=window['_f_'+id];
+  if(!file)return;
+  const btn=document.getElementById('btn-'+id);
+  btn.disabled=true;
+  hide('res-'+id); hide('err-'+id);
+
+  // Clear previous jump cards
+  const jlive = document.getElementById('jump-live-'+id);
+  if(jlive){ jlive.innerHTML=''; jlive.style.display='none'; }
+
+  show('loading-'+id);
+
+  const pbar=document.getElementById('pbar-'+id);
+  const ppct=document.getElementById('ppct-'+id);
+  const plabel=document.getElementById('plabel-'+id);
+
+  function setProgress(pct, label){
+    if(pbar)  pbar.style.width = pct+'%';
+    if(ppct)  ppct.textContent = pct+'%';
+    if(plabel)plabel.textContent = label||'';
+  }
+
+  setProgress(0, 'Uploading…');
+
+  const fd=new FormData();
+  fd.append('file', file);
+  fd.append('exercise', id);
+
+  let es = null;
+
+  try {
+    // STEP 1 — POST to /analyse → uid immediately (202)
+    const resp = await fetch('/analyse', {method:'POST', body:fd});
+    let initData;
+    try { initData = await resp.json(); } catch(_){}
+
+    if(!resp.ok || !initData || !initData.uid){
+      const msg = (initData&&initData.error) || `Upload failed (${resp.status})`;
+      setProgress(0,'Error');
+      hide('loading-'+id);
+      document.getElementById('errmsg-'+id).textContent='⚠ '+msg;
+      show('err-'+id);
+      btn.disabled=false;
+      return;
+    }
+
+    const uid = initData.uid;
+    setProgress(3, 'Initialising AI models…');
+
+    // STEP 2 — SSE: real progress + live jump events
+    await new Promise((resolve) => {
+      es = new EventSource('/progress/' + uid);
+
+      es.onmessage = (e) => {
+        try {
+          const p = JSON.parse(e.data);
+          setProgress(p.pct, p.label || 'Processing…');
+
+          // Live jump event — show card immediately
+          if(p.jump_event && (id === 'vertical_jump' || id === 'broad_jump')){
+            renderLiveJumpCard(id, p.jump_event);
+          }
+
+          if(p.done){ es.close(); es=null; resolve(); }
+        } catch(_) {}
+      };
+
+      es.onerror = () => { if(es){es.close();es=null;} resolve(); };
+      setTimeout(()=>{ if(es){es.close();es=null;} resolve(); }, 480000);
+    });
+
+    setProgress(99, 'Fetching results…');
+
+    // STEP 3 — Poll /result/<uid>
+    let result = null;
+    for(let attempt=0; attempt<12; attempt++){
+      const rr = await fetch('/result/'+uid);
+      if(rr.status===202){ await new Promise(r=>setTimeout(r,600)); continue; }
+      try{ result = await rr.json(); }catch(_){}
+      if(!rr.ok){
+        const msg=(result&&result.error)||`Analysis failed (${rr.status})`;
+        setProgress(100,'Error');
+        hide('loading-'+id);
+        document.getElementById('errmsg-'+id).textContent='⚠ '+msg;
+        show('err-'+id);
+        renderErrorResult(id, result||{error:msg});
+        show('res-'+id);
+        document.getElementById('res-'+id).scrollIntoView({behavior:'smooth',block:'start'});
+        btn.disabled=false;
+        return;
+      }
+      break;
+    }
+
+    if(!result){
+      setProgress(0,'Timeout');
+      hide('loading-'+id);
+      document.getElementById('errmsg-'+id).textContent='⚠ Result not ready — please try again.';
+      show('err-'+id);
+      btn.disabled=false;
+      return;
+    }
+
+    setProgress(100,'Complete');
+    hide('loading-'+id);
+    btn.disabled=false;
+    renderResult(id, result);
+    show('res-'+id);
+    setTimeout(()=>{ document.getElementById('res-'+id).scrollIntoView({behavior:'smooth',block:'start'}); },100);
+
+  } catch(e) {
+    if(es){es.close();es=null;}
+    setProgress(0,'Error');
+    hide('loading-'+id);
+    document.getElementById('errmsg-'+id).textContent='⚠ Network error: '+e.message;
+    show('err-'+id);
+    btn.disabled=false;
+  }
+}
+
+// ── Live per-jump card renderer ──────────────────────────────
+function renderLiveJumpCard(id, ev){
+  let container = document.getElementById('jump-live-'+id);
+  if(!container){
+    // Create container just before loading-box
+    const lb = document.getElementById('loading-'+id);
+    container = document.createElement('div');
+    container.id = 'jump-live-'+id;
+    container.style.cssText = 'margin:16px 0 0 0;display:flex;flex-wrap:wrap;gap:12px;';
+    lb.parentNode.insertBefore(container, lb);
+  }
+  container.style.display='flex';
+
+  const h   = ev.height_cm    || 0;
+  const dist= (ev.distance_cm !== undefined && ev.distance_cm !== null) ? ev.distance_cm : -1;
+  const ft  = ev.flight_ms    || 0;
+  const ls  = ev.landing_score|| 0;
+  const fs  = ev.form_score   || 0;
+  const to  = ev.takeoff_angle|| 0;
+  const la  = ev.landing_angle|| 0;
+  const img = ev.frame_b64    || '';
+  const jno = ev.jump_no      || container.children.length+1;
+  const sideOk = ev.side_view_ok !== false;
+
+  // Broad jump → show distance; vertical jump → show height
+  const isBroad = (id === 'broad_jump');
+  const topLabel = isBroad ? 'DISTANCE' : 'HEIGHT';
+  let topValue;
+  if(isBroad){
+    if(dist < 0)        topValue = '<span style="color:#f0a500;font-size:.72rem;">⚠ Side view needed</span>';
+    else if(dist === 0) topValue = 'N/A';
+    else                topValue = '~'+Math.round(dist)+'cm';
+  } else {
+    topValue = '~'+h+'cm';
+  }
+
+  // Score colour
+  const clr = fs>=8?'#00c47a':fs>=6?'#f0a500':'#e84c4c';
+
+  const card = document.createElement('div');
+  card.style.cssText = `
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.12);
+    border-left:3px solid ${clr};
+    border-radius:12px;
+    padding:12px 14px;
+    min-width:200px;
+    flex:1;
+    animation: jumpCardIn 0.35s cubic-bezier(.22,.68,0,1.2) both;
+    display:flex;flex-direction:column;gap:8px;
+  `;
+
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;color:rgba(255,255,255,.5);text-transform:uppercase;">Jump #${jno}</span>
+      <span style="font-family:var(--font-mono);font-size:.75rem;color:${clr};font-weight:700;">Form ${fs}/10</span>
+    </div>
+    ${img ? `<img src="data:image/jpeg;base64,${img}" style="width:100%;border-radius:8px;object-fit:cover;max-height:120px;" alt="Jump ${jno} peak"/>` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:.78rem;">
+      <div><span style="color:rgba(255,255,255,.45);font-size:.68rem;">${topLabel}</span><br><strong style="color:#fff;">${topValue}</strong></div>
+      <div><span style="color:rgba(255,255,255,.45);font-size:.68rem;">FLIGHT</span><br><strong style="color:#fff;">${ft}ms</strong></div>
+      <div><span style="color:rgba(255,255,255,.45);font-size:.68rem;">TAKEOFF</span><br><strong style="color:#fff;">${to}°</strong></div>
+      <div><span style="color:rgba(255,255,255,.45);font-size:.68rem;">LANDING</span><br><strong style="color:#fff;">${la}°</strong></div>
+      <div style="grid-column:1/-1;"><span style="color:rgba(255,255,255,.45);font-size:.68rem;">LANDING SCORE</span><br><strong style="color:${ls>=8?'#00c47a':ls>=6?'#f0a500':'#e84c4c'};">${ls}/10</strong></div>
+    </div>
+  `;
+  container.appendChild(card);
+
+  // Scroll loading box into view
+  document.getElementById('loading-'+id).scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+
+function angleClass(a){
+  if(a>=80&&a<=100)return 'angle-good';
+  if(a>=60&&a<=120)return 'angle-warn';
+  return 'angle-bad';
+}
+
+function renderErrorResult(id,d){
+  const root=document.getElementById('res-'+id);
+  const status=root.querySelector('.result-ok');
+  if(status){ status.textContent='✕ Error'; status.classList.add('error'); }
+  root.querySelector('.result-top').classList.add('error');
+  document.getElementById('res-title-'+id).textContent=(d.exercise? d.exercise+' ':'') + 'Analysis Error';
+  document.getElementById('metrics-'+id).innerHTML = `
+    <div class="metric-box">
+      <div class="metric-val">Error</div>
+      <div class="metric-lbl">${d.error || 'Analysis could not be completed.'}</div>
+    </div>
+    ${d.remark ? `<div class="metric-box"><div class="metric-val">Note</div><div class="metric-lbl">${d.remark}</div></div>` : ''}`;
+  document.getElementById('findings-'+id).innerHTML = `
+    <div class="finding-box neg">
+      <div class="finding-lbl">Error Details</div>
+      <ul>
+        <li>${d.error || 'Analysis could not be completed.'}</li>
+        ${d.remark ? `<li>${d.remark}</li>` : ''}
+      </ul>
+    </div>`;
+  document.getElementById('reps-'+id).style.display='none';
+  document.getElementById('snapgrid-'+id).innerHTML='';
+  renderOutputMedia(id,d);
+}
+
+function renderResult(id,d){
+  renderOutputMedia(id,d);
+  const root=document.getElementById('res-'+id);
+  const status=root.querySelector('.result-ok');
+  if(status){ status.textContent='✓ Complete'; status.classList.remove('error'); }
+  const top=root.querySelector('.result-top');
+  if(top){ top.classList.remove('error'); }
+  document.getElementById('res-title-'+id).textContent=d.exercise+' Report';
+  const mg=document.getElementById('metrics-'+id);
+  mg.innerHTML=d.metrics.map(m=>`
+    <div class="metric-box">
+      <div class="metric-val">${m.value}</div>
+      <div class="metric-lbl">${m.label}</div>
+    </div>`).join('');
+  const fi=document.getElementById('findings-'+id);
+  // Use strengths and issues arrays directly from backend — no regex filtering
+  const strengths   = (d.strengths && d.strengths.length) ? d.strengths : [];
+  const corrections = (d.issues   && d.issues.length)
+    ? d.issues.filter(i => !/^no major/i.test(i))
+    : [];
+  fi.innerHTML=`
+    <div class="finding-box pos">
+      <div class="finding-lbl">✓ Strengths</div>
+      <ul>${(strengths.length ? strengths : ['Good effort — keep training!']).map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>
+    <div class="finding-box neg">
+      <div class="finding-lbl">✗ Corrections</div>
+      <ul>${(corrections.length ? corrections : ['No major issues detected — excellent form!']).map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>`;
+  const repSec=document.getElementById('reps-'+id);
+  // per_jump table for vertical jump and broad jump
+  if(d.per_jump&&d.per_jump.length>0&&(id==='vertical_jump'||id==='broad_jump')){
+    repSec.style.display='block';
+    if(id==='broad_jump'){
+      document.getElementById('rephead-'+id).innerHTML='<th>Jump</th><th>Distance</th><th>Flight</th><th>Takeoff°</th><th>Landing°</th><th>Landing</th><th>Form</th>';
+      document.getElementById('repbody-'+id).innerHTML=d.per_jump.map(j=>{
+        const distVal = j.distance_cm > 0
+          ? '~'+Math.round(j.distance_cm)+'cm'
+          : 'N/A';
+        return `<tr>
+          <td><strong>${j.jump_no}</strong></td>
+          <td>${distVal}</td>
+          <td>${j.flight_ms}ms</td>
+          <td>${j.takeoff_angle}°</td>
+          <td>${j.landing_angle}°</td>
+          <td style="color:${j.landing_score>=8?'#00c47a':j.landing_score>=6?'#f0a500':'#e84c4c'}">${j.landing_score}/10</td>
+          <td style="color:${j.form_score>=8?'#00c47a':j.form_score>=6?'#f0a500':'#e84c4c'}">${j.form_score}/10</td>
+        </tr>`;
+      }).join('');
+    } else {
+      document.getElementById('rephead-'+id).innerHTML='<th>Jump</th><th>Height</th><th>Flight</th><th>Takeoff°</th><th>Landing°</th><th>Landing</th><th>Form</th>';
+      document.getElementById('repbody-'+id).innerHTML=d.per_jump.map(j=>`
+        <tr>
+          <td><strong>${j.jump_no}</strong></td>
+          <td>${j.height_cm}cm</td>
+          <td>${j.flight_ms}ms</td>
+          <td>${j.takeoff_angle}°</td>
+          <td>${j.landing_angle}°</td>
+          <td style="color:${j.landing_score>=8?'#00c47a':j.landing_score>=6?'#f0a500':'#e84c4c'}">${j.landing_score}/10</td>
+          <td style="color:${j.form_score>=8?'#00c47a':j.form_score>=6?'#f0a500':'#e84c4c'}">${j.form_score}/10</td>
+        </tr>`).join('');
+    }
+  } else if(d.per_rep&&d.per_rep.length>0){
+    repSec.style.display='block';
+    const keys=Object.keys(d.per_rep[0]).filter(k=>k!=='rep');
+    document.getElementById('rephead-'+id).innerHTML='<th>Rep</th>'+keys.map(k=>`<th>${k.replace(/_/g,' ')}</th>`).join('');
+    document.getElementById('repbody-'+id).innerHTML=d.per_rep.map(r=>`<tr><td><strong>${r.rep}</strong></td>${keys.map(k=>{
+      const v=r[k];
+      const cls=typeof v==='number'&&k.includes('angle')?angleClass(v):'';
+      return `<td class="${cls}">${typeof v==='number'?v.toFixed(1)+'°':v}</td>`;
+    }).join('')}</tr>`).join('');
+  }else{
+    repSec.style.display='none';
+  }
+  const sg=document.getElementById('snapgrid-'+id);
+  const isJump=id==='broad_jump'||id==='walking_broad_jump'||id==='vertical_jump'||id==='speed_20m';
+  const labels=isJump?PHASE_LABELS:SNAP_LABELS;
+  const snaps=(d.snapshots||[]);
+  window['_snaps_'+id]=snaps.map((b64,i)=>({src:'data:image/jpeg;base64,'+b64,label:labels[i]||'Frame '+(i+1)}));
+  sg.innerHTML=snaps.map((b64,i)=>`
+    <div class="snapshot-item">
+      <img src="data:image/jpeg;base64,${b64}" alt="Frame ${i+1}" loading="lazy"
+        style="cursor:zoom-in;" onclick="openLightbox('${id}',${i})" title="Click to enlarge"/>
+      <div class="snap-label">${labels[i]||'Frame '+(i+1)}</div>
+    </div>`).join('');
+}
+
+// ── CANVAS VIDEO PLAYER ───────────────────────────────
+const _vidState = {};
+
+function initCanvasPlayer(id, frames, fps) {
+  const canvas = document.getElementById('outcanvas-' + id);
+  if (!frames || frames.length === 0) return;
+  const ctx = canvas.getContext('2d');
+  const totalFrames = frames.length;
+  const interval = 1000 / fps;
+
+  const b64s = frames;
+  const imgs = new Array(totalFrames).fill(null);
+
+  function getImg(i) {
+    if (!imgs[i]) {
+      imgs[i] = new Image();
+      imgs[i].src = 'data:image/jpeg;base64,' + b64s[i];
+    }
+    for (let j = i + 1; j < Math.min(i + 5, totalFrames); j++) {
+      if (!imgs[j]) { imgs[j] = new Image(); imgs[j].src = 'data:image/jpeg;base64,' + b64s[j]; }
+    }
+    return imgs[i];
+  }
+
+  const img0 = getImg(0);
+  const setSize = () => {
+    canvas.width  = img0.naturalWidth;
+    canvas.height = img0.naturalHeight;
+    canvas.style.width  = '100%';
+    canvas.style.height = 'auto';
+    ctx.drawImage(img0, 0, 0, canvas.width, canvas.height);
+  };
+  if (img0.complete) setSize(); else img0.onload = setSize;
+
+  document.getElementById('vidseek-' + id).max = totalFrames - 1;
+
+  _vidState[id] = {
+    getImg, fps, interval, totalFrames,
+    currentFrame: 0, playing: false, timer: null, ctx, canvas
+  };
+}
+
+function _drawFrame(id) {
+  const s = _vidState[id]; if (!s) return;
+  const img = s.getImg(s.currentFrame);
+  if (img.complete) {
+    s.ctx.drawImage(img, 0, 0, s.canvas.width, s.canvas.height);
+  }
+  const seek = document.getElementById('vidseek-' + id);
+  if (seek) seek.value = s.currentFrame;
+  const t = document.getElementById('vidtime-' + id);
+  if (t) {
+    const sec = Math.floor(s.currentFrame / s.fps);
+    t.textContent = Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+  }
+}
+
+function togglePlay(id) {
+  const s = _vidState[id]; if (!s) return;
+  const btn = document.getElementById('playbtn-' + id);
+  if (s.playing) {
+    clearInterval(s.timer); s.playing = false;
+    if (btn) btn.textContent = '▶';
+  } else {
+    if (s.currentFrame >= s.totalFrames - 1) s.currentFrame = 0;
+    s.playing = true;
+    if (btn) btn.textContent = '⏸';
+    s.timer = setInterval(() => {
+      s.currentFrame++;
+      if (s.currentFrame >= s.totalFrames) {
+        s.currentFrame = 0; clearInterval(s.timer);
+        s.playing = false; if (btn) btn.textContent = '▶';
+      }
+      _drawFrame(id);
+    }, s.interval);
+  }
+}
+
+function seekVideo(id, val) {
+  const s = _vidState[id]; if (!s) return;
+  s.currentFrame = parseInt(val);
+  _drawFrame(id);
+}
+
+function toggleFullscreen(id) {
+  // Use the controls div's parent section so canvas+controls both go fullscreen
+  const sec = document.getElementById('outvidsec-' + id);
+  if (sec) {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else sec.requestFullscreen();
+  }
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────
+let _lbId=null, _lbIdx=0;
+function openLightbox(id,idx){
+  _lbId=id; _lbIdx=idx;
+  const snaps=window['_snaps_'+id]||[];
+  document.getElementById('lb-img').src=snaps[idx].src;
+  document.getElementById('lb-label').textContent=snaps[idx].label;
+  const lb=document.getElementById('lightbox');
+  lb.style.display='flex';
+  document.addEventListener('keydown',lbKey);
+}
+function closeLightbox(){
+  document.getElementById('lightbox').style.display='none';
+  document.removeEventListener('keydown',lbKey);
+}
+function lbNav(dir){
+  const snaps=window['_snaps_'+_lbId]||[];
+  _lbIdx=(_lbIdx+dir+snaps.length)%snaps.length;
+  document.getElementById('lb-img').src=snaps[_lbIdx].src;
+  document.getElementById('lb-label').textContent=snaps[_lbIdx].label;
+}
+function lbKey(e){
+  if(e.key==='ArrowRight')lbNav(1);
+  else if(e.key==='ArrowLeft')lbNav(-1);
+  else if(e.key==='Escape')closeLightbox();
+}
+</script>
+</body>
+</html>
